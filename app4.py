@@ -1,34 +1,58 @@
 import streamlit as st
 import pandas as pd
 from sklearn.model_selection import train_test_split
-from sklearn.linear_model import LinearRegression
-from sklearn.metrics import mean_squared_error
-data = {
-    "PIN CODE": [210507,160047,110059,120089,178900],
-    "LATITUDE": [23,34,54,65,76],
-    "LONGITUDE": [23,40,50,70,100],
-    "LOCATION": [23,40,50,70,100],
-    "NO OF CAR_CRASH":[100,400,600,800,900]
-}
-df = pd.DataFrame(data)
-features = df[['PIN CODE','LATITUDE','LONGITUDE','LOCATION']]
-target = df[ "NO OF CAR_CRASH"]
+from sklearn.linear_model import LogisticRegression
 
-X_train,X_test,y_train,y_test = train_test_split(features,target,test_size=0.2,random_state=42)
+# Creating an example dataset for marriage prediction
+data = pd.DataFrame({
+    'Age': [25, 30, 35, 40, 28, 33],
+    'RelationshipStatus': ['Single', 'Single', 'In a relationship', 'Married', 'Single', 'In a relationship'],
+    'EducationLevel': ['Bachelor', 'Master', 'PhD', 'Bachelor', 'Master', 'PhD'],
+    'Occupation': ['Engineer', 'Doctor', 'Teacher', 'Artist', 'Engineer', 'Lawyer'],
+    'Lifestyle': ['Active', 'Active', 'Sedentary', 'Sedentary', 'Active', 'Sedentary'],
+    'Married': [0, 0, 1, 1, 0, 1] # 1 for married, 0 for not married
+})
 
-model = LinearRegression()
-model.fit(X_train,y_train)
+# Convert non-numeric values to numeric
+relationship_mapping = {'Single': 1, 'In a relationship': 2, 'Married': 3}
+education_mapping = {'Bachelor': 1, 'Master': 2, 'PhD': 3}
+occupation_mapping = {'Engineer': 1, 'Doctor': 2, 'Teacher': 3, 'Artist': 4, 'Lawyer': 5}
+lifestyle_mapping = {'Active': 1, 'Sedentary': 2}
 
-prediction = model.predict(X_test)
-mse = mean_squared_error(y_test,prediction)
+data['RelationshipStatus'] = data['RelationshipStatus'].map(relationship_mapping)
+data['EducationLevel'] = data['EducationLevel'].map(education_mapping)
+data['Occupation'] = data['Occupation'].map(occupation_mapping)
+data['Lifestyle'] = data['Lifestyle'].map(lifestyle_mapping)
 
-st.title("NO_OF_Car_crash_prediction")
+# Splitting the data
+X = data[['Age', 'RelationshipStatus', 'EducationLevel', 'Occupation', 'Lifestyle']]
+y = data['Married']
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
 
-zip_code =st.slider('PIN CODE',min_value=110001, max_value=191001,value=130001)
-Lati = st.slider('LATITUDE',min_value=0, max_value =  90 , value=5)
-Long = st.slider('LONGITUDE',min_value=0, max_value = 180 , value= 20 )
-LOC = st.slider('LOCATION', min_value = 0 , max_value=100, value= 23)
+# Model Training
+model = LogisticRegression()
+model.fit(X_train, y_train)
 
-if st.button("Prediction"):
-    prediction_time = model.predict([[zip_code,Lati,Long,LOC]])[0]
-    st.write(f"NO of_Car_Crash_prediction: {prediction_time}")
+# Streamlit UI for Marriage Prediction
+st.title('Marriage Prediction')
+
+# User input for name
+user_name = st.text_input('Enter your name')
+
+# User input for predictions
+age = st.slider('Age', min_value=18, max_value=60, value=25)
+relationship_status = st.selectbox('Relationship Status', ['Single', 'In a relationship', 'Married'])
+education_level = st.selectbox('Education Level', ['Bachelor', 'Master', 'PhD'])
+occupation = st.selectbox('Occupation', ['Engineer', 'Doctor', 'Teacher', 'Artist', 'Lawyer'])
+lifestyle = st.selectbox('Lifestyle', ['Active', 'Sedentary'])
+
+relationship_status_num = relationship_mapping[relationship_status]
+education_num = education_mapping[education_level]
+occupation_num = occupation_mapping[occupation]
+lifestyle_num = lifestyle_mapping[lifestyle]
+
+# Prediction
+if st.button('Predict Marriage'):
+    prediction = model.predict([[age, relationship_status_num, education_num, occupation_num, lifestyle_num]])[0]
+    marriage_status = 'Married' if prediction == 1 else 'Not Married'
+    st.write(f"Hello, {user_name}! Predicted Marriage Status: {marriage_status}")

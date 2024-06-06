@@ -1,6 +1,9 @@
 # Import necessary libraries
 import streamlit as st
 import pandas as pd
+import numpy as np
+from sklearn.linear_model import LinearRegression
+from sklearn.model_selection import train_test_split
 
 # Create a hardcoded dataset (you can replace this with your own data)
 data = {
@@ -28,17 +31,19 @@ year = st.sidebar.number_input('Enter Year', min_value=1980, max_value=2025)
 mileage = st.sidebar.number_input('Enter Mileage (in miles)', min_value=0)
 prediction_button = st.sidebar.button('Predict Price')
 
+# Split the dataset into features (X) and target (y)
+X = df[['Year', 'Mileage (in miles)']]
+y = df['Price (in dollars)']
+
+# Train a linear regression model
+model = LinearRegression()
+model.fit(X, y)
+
 # Function to predict car price
-def predict_price(car_model, year, mileage):
-    # For simplicity, we will just return the average price of cars with the same model in the dataset
-    filtered_df = df[df['Car Model'] == car_model]
-    if len(filtered_df) == 0:
-        return "Car model not found in the dataset"
-    else:
-        avg_price = filtered_df['Price (in dollars)'].mean()
-        return f'Predicted Price: ${avg_price:.2f}'
+def predict_price(year, mileage):
+    return model.predict([[year, mileage]])[0]
 
 # Make a prediction if the prediction button is clicked
 if prediction_button:
-    prediction = predict_price(car_model, year, mileage)
-    st.sidebar.text(prediction)
+    prediction = predict_price(year, mileage)
+    st.sidebar.text(f'Predicted Price: ${prediction:.2f}')
